@@ -1,8 +1,7 @@
 #!/bin/bash
 
 
-for file in `ls style`
+for file in `ls *finish*.png`
 do
-  echo  ${file%.*}
-  #echo  ${file#*.}
+  mv $file `echo ${file//finish/}`
 done
