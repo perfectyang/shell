@@ -1,0 +1,16 @@
+@import '../../../shared/styles/index.scss';
+
+.product-tax {
+  display: flex;
+newLine
+  align-items: center;
+  font-size: 14px;
+  color: le-color(color_text) !important;
+  font-size: 0.6;
+  @include media-breakpoint-down(md) {
+    font-size: 12px;
+  }
+}
+.product-tax-ml {
+  margin-right: 10px;
+}

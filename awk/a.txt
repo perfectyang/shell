@@ -1,0 +1,17 @@
+a  b  c   d
+// 海度新协议事件成功才上报
+if (data.event_status === 1) {
+  newHdReportData({
+    addtocartType: paypal,
+    price: data.price,
+  });
+}
+// 海度新协议事件成功才上报 
+if (data.event_status === 1) {
+  newHdReportData({
+    addtocartType: paypal,
+    price: data.price,
+  });
+}
+a2  b  c   d
+php js java javascript

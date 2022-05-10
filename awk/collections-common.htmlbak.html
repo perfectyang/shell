@@ -1,0 +1,125 @@
+{{!-- 面包屑导航用 --}}
+{{preload_state 'sortation.sortation.title'}}
+{{assign 'top_ten_products_list' (array-slice products.list 0 10)}}
+{{assign 'products_list' products.list}}
+
+{{#partial 'seo-meta'}}
+  {{!-- 单个分类页 商品列表页 --}}
+  {{#if (isTruthy sortation)}}
+    {{!-- 通过后端返回的handle 去拼接分类页url --}}
+    {{ assign 'url'  (append request.uri.domain '/collections/' sortation.sortation.uniqueKey) }}
+    {{ assign 'ogTitle' sortation.seoInfo.title}}
+    {{ assign 'ogDescription' (cond sortation.seoInfo.desc sortation.seoInfo.desc storeInfo.name)}}
+    {{ assign 'keywords' sortation.seoInfo.key}}
+    {{ assign 'seoTitle' (append sortation.seoInfo.title ' - ' storeInfo.name)}}
+    {{ assign 'seoDescription' sortation.seoInfo.desc}}
+    {{#if sortation.sortation.sortationCoverImg}}
+      {{ assign 'image' sortation.sortation.sortationCoverImg}}
+    {{else if page_image}}
+      {{ assign 'image' page_image}}
+    {{else }}
+      {{ assign 'image' theme.settings.co_checkout_image.url}}
+    {{/if}}
+    {{ assign 'card' 'summary_large_image'}}
+    {{ assign 'type' 'collection'}}
+  {{!-- 全部商品页 --}}
+  {{else}}
+    {{ assign 'ogTitle' 'All Products'}}
+    {{ assign 'ogDescription' storeInfo.name }}
+    {{ assign 'url' (append request.uri.domain  request.uri.path) }}
+    {{#if page_image}}
+      {{ assign 'image' page_image}}
+    {{else }}
+      {{ assign 'image' theme.settings.co_checkout_image.url}}
+    {{/if}}
+    {{ assign 'seoTitle' 'Products'}}
+    {{ assign 'seoDescription' ''}}
+    {{ assign 'keywords' ''}}
+    {{ assign 'card' 'summary_large_image'}}
+    {{ assign 'type' 'collection'}}
+  {{/if}}
+
+  {{#cli_import '@yy/sl-theme-shared/components/hbs/seoMeta'}}
+  {{/cli_import}}
+{{/partial}}
+
+{{#partial 'title'}}
+  {{#if (isTruthy sortation)}}
+    <title>{{sortation.seoInfo.title}} - {{storeInfo.name}}</title>
+  {{else}}
+    <title>All products - {{storeInfo.name}}</title>
+  {{/if}}
+{{/partial}}
+
+{{#partial 'page_view'}}
+  {{ cli_import '@yy/sl-theme-shared/report/customArgs/gar' }}
+
+  <script>
+  !function () {
+    var sortBy = {
+      1: 'default',
+      2: 'default',
+      3: 'newestToOldest',
+      4: 'priceLowToHigh',
+      5: 'priceHighToLow',
+    };
+    var GARSkuIds = window.SL_GetReportArg('GAR', 'sku_id')
+    window.HdSdk.shopTracker.report('60006260', {
+      event_name: 'view',
+      page: 'product_list',
+      display_iterm_sum: {{default products.list.length 24}},
+      sort_by: sortBy['{{request.uri.query.sort_type}}'] || 'default',
+      pro_list_type: "{{cond request.uri.params.uniqueKey 'category' 'all_product' }}",
+      iframe_id: '1'
+    })
+    // 第三方埋点
+    window.SL_EventBus.emit('global:thirdPartReport', {
+      GA: [
+        [
+          'event',
+          'view_item_list',
+          {
+            items: [{{#forEach products_list}}{id: '{{cond reportSkuItemNo reportSkuItemNo reportSkuId}}', name: '{{title}}', price: '{{currency_format productMinPrice}}', list_name: '{{#if ../sortationId}}{{../sortation.sortation.title}}{{else}}All Products{{/if}}', list_position: {{index}} }{{#unless isLast}},{{/unless}}{{/forEach}}]
+          },
+        ],
+      ],
+      GA4: [
+        [
+          'event',
+          'view_item_list',
+          {
+            items: [{{#forEach products_list}}{item_id: '{{cond reportSkuItemNo reportSkuItemNo reportSkuId}}', item_name: '{{title}}', price: '{{currency_format productMinPrice}}', item_list_name: '{{#if ../sortationId}}{{../sortation.sortation.title}}{{else}}All Products{{/if}}', index: {{index}} }{{#unless isLast}},{{/unless}}{{/forEach}}]
+          },
+        ],
+      ],
+      GAR: [
+      [
+         'event',
+          'view_item_list',
+          {
+            items: [{{#forEach top_ten_products_list}}{id: GARSkuIds('{{reportSkuId}}'), google_business_vertical: 'retail'}{{#unless isLast}},{{/unless}}{{/forEach}}]
+          }
+       ]
+      ],
+      newGARemarketing: [
+      [
+         'event',
+          'view_item_list',
+          {
+            ecomm_prodid: [{{#forEach top_ten_products_list}}GARSkuIds('{{reportSkuId}}'){{#unless isLast}},{{/unless}}{{/forEach}}], 
+            ecomm_pagetype: {{#if sortationId}}'category'{{else}}'other'{{/if}},
+            ecomm_pcat: {{#if sortationId}}'{{sortation.sortation.title}}'{{else}}'All Products'{{/if}},
+            ecomm_category : {{#if sortationId}}'{{sortationId}}'{{else}}''{{/if}},
+          }
+       ]
+      ],
+    });
+  }()
+  </script>
+{{/partial}}
+
+{{#partial 'script'}}
+  <script>
+    window.__I18N__.productDetail = {{{JSONstringify (t 'productDetail')}}}
+  </script>
+{{/partial}}

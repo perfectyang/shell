@@ -1,0 +1,16 @@
+  // 海度新协议事件成功才上报
+  if (data.event_status === 1) {
+    newHdReportData({
+      addtocartType: 'paypal',
+      price: data.price,
+      page: data.page,
+      skuId: data.skuId,
+      spuId: data.spuId,
+      num: data.quantity,
+      modalType: data.modalType,
+      variant: data.variant,
+      collectionId: data.collectionId,
+      collectionName: data.collectionName,
+      position: data.position,
+    });
+  }

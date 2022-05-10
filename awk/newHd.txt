@@ -1,0 +1,90 @@
+const componentMap = {
+  addtocart: 101,
+  buynow: 102,
+  paypal: 103,
+  morePay: 104,
+};
+
+const pageMap = {
+  Home: {
+    page: 101,
+    module: 101,
+  },
+  ProductsDetail: {
+    page: 105,
+    module: 102,
+  },
+  QuickView: {
+    page: 107,
+    module: 102,
+  },
+  QuickAdd: {
+    page: 108,
+    module: 102,
+  },
+  SingleQuickAdd: {
+    // 无款式商品，点击快速加购按钮将会直接加入购物车，此时上报此事件
+    page: 108,
+    module: 109,
+    component: 101,
+  },
+};
+const pageId = {
+  Home: 101,
+  ProductsSearch: 102,
+  Products: 103,
+  ProductsDetail: 105,
+  Activity: 115,
+};
+
+// 如何modalType无值，则用window.SL_State.get('templateAlias') 来区分是否是首页，还是详情页
+// modalType: QuickAdd QuickView SingleQuickAdd 用来区分弹窗类型
+// https://shopline.yuque.com/slpm/svh090/tk5zz9#r0Wd 参数文档
+function newHdReportData({ addtocartType, price, skuId, spuId, num, modalType, variant, collectionId, collectionName, position }) {
+  console.log('modalType', modalType);
+  let config = {};
+  if (modalType) {
+    // 弹窗里面的加购事件
+    config = pageMap[modalType];
+    // 弹窗需要加page_id来区分
+    config.page_id = pageId[window.SL_State?.get('templateAlias')];
+  } else {
+    // 页面的加购事件
+    config = pageMap[window.SL_State?.get('templateAlias')] ?? {};
+  }
+  const index = (position ?? '') === '' ? '' : Number(position) + 1
+  let data = {
+    component: componentMap[addtocartType],
+    ...config,
+    event_name: 'AddToCart',
+    addtocart_type: addtocartType === 'morePay' ? 'buynow' : addtocartType,
+    action_type: -999, // 标准事件都是-999,产品定的
+    event_id: `AddToCart${getEventID()}`,
+    currency: window?.SL_State?.get('storeInfo.currency'),
+    value: formatCurrency(price), // 价格
+    items: [
+      {
+        sku_id: skuId,
+        spu_id: spuId,
+        index,
+        collection_id: collectionId ?? '',
+        collection_name: collectionName ?? '',
+        variant: variant ?? '',
+        price: formatCurrency(price),
+        quantity: num,
+      },
+    ],
+  };
+  // 快速加购」按钮的主题样式，若该商品是无款式商品，在商品列表，点击快速加购按钮将会直接加入购
+  if (modalType && modalType === 'SingleQuickAdd') {
+    data = {
+      ...config,
+      spu_id: spuId,
+      price: formatCurrency(price),
+      position: index,
+      status: 1
+    }
+  }
+  console.log('新协议海度上报---测试看', data);
+  window.HdSdk?.shopTracker.collect(data);
+}

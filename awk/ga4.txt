@@ -1,0 +1,16 @@
+  // 海度新协议事件成功才上报
+  if (event_status === 1) {
+    newHdReportData({
+      addtocartType: 'addtocart',
+      price,
+      page,
+      skuId,
+      spuId,
+      num,
+      modalType,
+      variant,
+      collectionId,
+      collectionName,
+      position,
+    });
+  }
